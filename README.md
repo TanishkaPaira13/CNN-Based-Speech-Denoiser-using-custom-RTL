@@ -31,4 +31,18 @@ No HLS. No NPU. Just the FPGA fabric.
 
 ---
 
-## 🧠 Architecture Overview
+- **Training**: PyTorch on Kaggle (Tesla T4 GPU) with LibriSpeech (clean) + UrbanSound8K (noise) mixed at random SNRs (–5 to +15 dB).
+- **Quantisation**: 8‑bit Q7.8 fixed‑point with per‑layer scaling. Weights exported as `.mem` hex files for `$readmemh`.
+- **RTL Implementation**:
+  - `conv_engine.v`: Sequential Conv2D engine with inner loops over input channels and kernel positions.
+  - `feature_bram.v`: Dual‑port BRAM for feature maps (257×64×16).
+  - `weight_rom.v` / `bias_rom.v`: ROMs for weights and biases.
+  - `denoiser_top.v`: Top module chaining 4 layers with ping‑pong BRAM banks.
+- **AXI Interfaces**:
+  - **AXI4‑Stream**: Pixel streaming (input / output).
+  - **AXI4‑Lite**: Control (start, status, IRQ).
+- **Software**:
+  - **Vitis Bare‑Metal C**: STFT/iSTFT, AXI DMA, and audio reconstruction.
+  - **Ubuntu Python Script**: Offline inference for validation (`inference_denoiser.py`).
+
+---
